@@ -32,6 +32,10 @@ wss.on('connection', function connection(ws) {
   ws.send('Connection successful');
 });
 
+wss.on('close', function connection(ws) {
+  gws = null;
+});
+
 ///////////////////////////////////////////////////////////////
 // Create Serial Port Server
 
@@ -73,7 +77,7 @@ SerialPort.list(function (err, ports) {
       if (data.startsWith("DEBUG")) {
         console.log('DEBUG from Arduino: ' + data);
       } else {
-        if(gws){
+        if(gws && gws.connected){
           gws.send(data);
         }
         else{

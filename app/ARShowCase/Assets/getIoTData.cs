@@ -1,49 +1,55 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using SocketIO;
+using UnityEngine.Networking;
+
+//using System.Web;
+
+//[Serializable]
+public class SensorData
+{
+	public int angle;
+}
 
 public class getIoTData : MonoBehaviour {
-	SocketIOComponent socket;
+	
 	TextMesh sensorDataText;
+	string url = "http://192.168.192.9:1880/sensordata";
+	bool requesting = false;
 	// Use this for initialization
 	void Start () {
 		sensorDataText = GetComponent<TextMesh> ();
-		//socket = GetComponent<SocketIOComponent> ();
-		GameObject go = GameObject.Find("SocketIO");
-		SocketIOComponent socket = go.GetComponent<SocketIOComponent>();
-
-		socket.On ("open", TestOpen);
-		socket.On ("error", TestError);
-		socket.On ("close", TestClose);
-		socket.On ("data", SocketEventHandler);
-		socket.Emit ("start:0");
+		sensorDataText.text = "init";
+		StartCoroutine (getSensorData ());
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
+		if (!requesting) {
+			StartCoroutine (getSensorData ());
+		}
 	}
 
-	public void SocketEventHandler(SocketIOEvent e) {
-		Debug.Log("[SocketIO] Message received: " + e.name + " " + e.data);
-		sensorDataText.text = e.data.ToString();
-	}
-
-	public void TestOpen(SocketIOEvent e)
+	IEnumerator getSensorData()
 	{
-		Debug.Log("[SocketIO] Open received: " + e.name + " " + e.data);
-		socket.Emit ("hello:{}");
+		this.requesting = true;
+		using (UnityWebRequest www = UnityWebRequest.Get(url))
+		{
+			yield return www.Send();
+
+			if (www.isError)
+			{
+				Debug.Log(www.error);
+			}
+			else
+			{
+				// Show results as text
+				Debug.Log(www.downloadHandler.text);
+				SensorData data = JsonUtility.FromJson<SensorData>(www.downloadHandler.text);
+				sensorDataText.text = data.angle + "°";
+			}
+			this.requesting = false;
+		}
 	}
 
-	public void TestError(SocketIOEvent e)
-	{
-		
-		Debug.Log("[SocketIO] Error received: " + e.name + " " + e.data);
-	}
-
-	public void TestClose(SocketIOEvent e)
-	{	
-		Debug.Log("[SocketIO] Close received: " + e.name + " " + e.data);
-	}
 }

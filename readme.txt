@@ -20,3 +20,7 @@ A Platform (in our case node-red) that connects to all devices and provides an i
 Level 4 : Application
 The app on the tablet (on our case build on unity with Vuforia towards iOS)
 
+
+## Authors Remarks
+
+Default Credentials for Arduino are set to rool:walle
